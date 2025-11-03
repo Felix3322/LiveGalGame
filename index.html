@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Galgame Agent</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div id="app">
+        <video id="camera-feed" autoplay playsinline muted></video>
+        <img id="sprite" alt="角色立绘" src="" hidden />
+        <div id="ui-layer">
+            <header class="top-bar">
+                <button id="switch-camera">切换摄像头</button>
+                <label class="character-toggle">
+                    <span>角色位置</span>
+                    <select id="sprite-position">
+                        <option value="left">左侧</option>
+                        <option value="right">右侧</option>
+                    </select>
+                </label>
+                <label class="sprite-selector">
+                    <span>立绘</span>
+                    <input id="sprite-file" type="file" accept="image/png,image/webp,image/jpeg" />
+                </label>
+            </header>
+
+            <main class="dialogue-area">
+                <div class="dialogue-box">
+                    <div class="nameplate" id="speaker-name">???</div>
+                    <div class="dialogue-text">
+                        <span id="subtitle"></span>
+                        <span class="cursor" id="type-cursor">▋</span>
+                    </div>
+                </div>
+                <div class="options" id="options"></div>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="gender-warning">
+        <div class="modal-content">
+            <h2>性别警告</h2>
+            <p>小心我把你送到成都！</p>
+            <button id="close-warning">我知道了</button>
+        </div>
+    </div>
+
+    <template id="option-template">
+        <button class="option-button"></button>
+    </template>
+
+    <script src="agent.js" type="module"></script>
+</body>
+</html>
