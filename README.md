@@ -24,35 +24,49 @@
 
 ## 快速启动
 
-### 1. 启动后端
+### 一键部署脚本
+
+项目根目录新增了 `deploy.sh`，它会：
+
+1. 检查并自动安装 `ffmpeg`（Whisper 转码所需）；
+2. 创建/复用 `.venv` 虚拟环境；
+3. 安装 `requirements.txt` 中列出的依赖（FastAPI、faster-whisper、OpenAI SDK、Ultralytics 等）；
+4. 启动 `uvicorn server.server:app`。
+
+使用方式：
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install fastapi[all] uvicorn
-python -m server.server
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-可选：
-- 安装 `vosk` 并将模型路径写入 `VOSK_MODEL_PATH` 环境变量，可获得真实语音识别。
-- 安装 `ultralytics` 并设置 `YOLO_WEIGHTS` 环境变量，即可启用 YOLO 性别识别。
+> 默认监听 `0.0.0.0:8000`，可通过 `PORT` 环境变量覆盖。
 
-### 2. 启动前端
+### 环境变量
 
-使用任意静态资源服务器，例如：
+| 变量名 | 说明 |
+| --- | --- |
+| `OPENAI_API_KEY` | （可选）提供后 `/gpt` 会实时调用 OpenAI Chat Completions，并生成 Galgame 风格分支。 |
+| `OPENAI_MODEL` | 默认 `gpt-3.5-turbo`，可指定其他 Chat Completions 模型。 |
+| `OPENAI_BASE_URL` | 对接 Azure/OpenAI 兼容代理时可设置。 |
+| `WHISPER_MODEL_SIZE` | Whisper 模型尺寸，默认为 `small`，可改为 `base`/`medium` 等。 |
+| `WHISPER_DEVICE` | `auto`/`cpu`/`cuda`，决定 faster-whisper 的推理设备。 |
+| `WHISPER_LANGUAGE` | （可选）指定语言代码，可加速推理。 |
+| `YOLO_WEIGHTS` | Ultralytics 权重路径，配置后 `/yolo_gender` 将调用真实模型。 |
+
+前端仍可通过任意静态资源服务器托管：
 
 ```bash
 python -m http.server 5173
 ```
 
-然后浏览器打开 `http://localhost:5173`。
-
-> 若通过 `http.server` 提供静态文件，请确保反向代理或浏览器允许跨域访问后端（默认 FastAPI 已开启 CORS）。
+浏览器访问 `http://localhost:5173`，即可与后端交互。
 
 ## 模型接入说明
 
-- **Vosk ASR**：`VoskStreamingRecognizer` 中包含占位逻辑，真实部署时请将 MediaRecorder 推送的 WebM 转换为 PCM 后再交给 Vosk。
-- **YOLO**：`GenderClassifier` 默认返回 `female`，以避免误报。传入权重后会自动调用 `ultralytics.YOLO` 进行推理。
+- **Whisper ASR**：`WhisperStreamingRecognizer` 使用 `faster-whisper` + `ffmpeg` 将 MediaRecorder 发送的 WebM 片段转写为文本。音频缓冲达到 20KB 即触发识别。若缺少模型或 `ffmpeg`，会输出占位提示。
+- **OpenAI 剧情引擎**：`BranchEngine` 检测到 `OPENAI_API_KEY` 后会调用 Chat Completions API，根据玩家语音生成 2~3 句 Galgame 风格回复，并结合意图自动给出 3 个分支选项。
+- **YOLO 性别识别**：`GenderClassifier` 默认调用 `ultralytics.YOLO` 推理，若未提供权重会退回一个置信度较高的女性结果，以避免误报造成骚扰。
 
 ## TODO（扩展方向）
 
